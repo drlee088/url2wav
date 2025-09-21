@@ -9,24 +9,41 @@
         form { margin-top: 20px; }
         input, button { font-size: 16px; padding: 5px; }
         #logs { background: #111; padding: 10px; border: 1px solid #0f0; width: 80%; height: 300px; overflow-y: scroll; margin-top: 20px; white-space: pre-wrap; }
+        #download-link { margin-top: 20px; }
     </style>
 </head>
 <body>
     <h1>Descargar YouTube (Audio WAV)</h1>
-    <form method="post">
+    <form method="post" id="download-form">
         <label>URL de YouTube:</label><br>
         <input type="text" name="url" required style="width: 400px;"><br><br>
         <button type="submit">Descargar</button>
     </form>
 
     <div id="logs"></div>
+    <div id="download-link"></div>
 
     <script>
         var evtSource = new EventSource("/logs");
         var logsDiv = document.getElementById("logs");
+        var linkDiv = document.getElementById("download-link");
+        var lastFile = "";
+
         evtSource.onmessage = function(e) {
             logsDiv.innerText += e.data;
             logsDiv.scrollTop = logsDiv.scrollHeight;
+
+            // Detecta el destino de la descarga y muestra link
+            if(e.data.includes("Destin") && e.data.includes(".wav")) {
+                let parts = e.data.split("Destino: ");
+                if(parts.length > 1) {
+                    let filename = parts[1].split("/").pop();
+                    if(filename !== lastFile) {
+                        lastFile = filename;
+                        linkDiv.innerHTML = `<a href="/download/${encodeURIComponent(filename)}">⬇️ Descargar ${filename}</a>`;
+                    }
+                }
+            }
         };
     </script>
 </body>
