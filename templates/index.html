@@ -1,61 +1,33 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<title>Descargar Audio YouTube</title>
-<style>
-body { background:#000; color:#fff; text-align:center; font-family:monospace; padding:30px; }
-input, button { padding:10px; margin:5px; border-radius:5px; border:none; font-size:16px; }
-input[type=text] { width:80%; }
-button { background:#444; color:#fff; cursor:pointer; }
-button:hover { background:#666; }
-pre {
-    background:#111;
-    color:#0f0;
-    text-align:left;
-    margin:20px auto;
-    max-width:900px;
-    padding:15px;
-    border-radius:10px;
-    border:1px solid #333;
-    white-space:pre-wrap;
-    height:300px;
-    overflow-y:scroll;
-}
-</style>
+    <meta charset="UTF-8">
+    <title>Descargar YouTube</title>
+    <style>
+        body { background: #000; color: #0f0; display: flex; flex-direction: column; align-items: center; font-family: monospace; }
+        h1 { margin-top: 20px; }
+        form { margin-top: 20px; }
+        input, button { font-size: 16px; padding: 5px; }
+        #logs { background: #111; padding: 10px; border: 1px solid #0f0; width: 80%; height: 300px; overflow-y: scroll; margin-top: 20px; white-space: pre-wrap; }
+    </style>
 </head>
 <body>
-<h1>Descargar Audio YouTube</h1>
-<form id="downloadForm">
-<input type="text" name="url" placeholder="Pega la URL aquí..." required><br>
-<button type="submit">Descargar</button>
-</form>
+    <h1>Descargar YouTube (Audio WAV)</h1>
+    <form method="post">
+        <label>URL de YouTube:</label><br>
+        <input type="text" name="url" required style="width: 400px;"><br><br>
+        <button type="submit">Descargar</button>
+    </form>
 
-<h2>Logs</h2>
-<pre id="logs"></pre>
+    <div id="logs"></div>
 
-<script>
-const form = document.getElementById("downloadForm");
-const logsDiv = document.getElementById("logs");
-
-form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    logsDiv.innerHTML = "";
-
-    const formData = new FormData(form);
-    const res = await fetch("/start_download", { method:"POST", body:formData });
-    const data = await res.json();
-    const job_id = data.job_id;
-
-    const evtSource = new EventSource(`/stream/${job_id}`);
-    evtSource.onmessage = function(e){
-        logsDiv.innerHTML += e.data + "\n";
-        logsDiv.scrollTop = logsDiv.scrollHeight;
-        if(e.data.includes("✅ Descarga finalizada.") || e.data.includes("❌ Error")) {
-            evtSource.close();
-        }
-    }
-});
-</script>
+    <script>
+        var evtSource = new EventSource("/logs");
+        var logsDiv = document.getElementById("logs");
+        evtSource.onmessage = function(e) {
+            logsDiv.innerText += e.data;
+            logsDiv.scrollTop = logsDiv.scrollHeight;
+        };
+    </script>
 </body>
 </html>
