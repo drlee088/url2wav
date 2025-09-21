@@ -1,5 +1,6 @@
 import os
-from flask import Flask, render_template, request, Response
+import shutil
+from flask import Flask, render_template, request, Response, send_from_directory
 import yt_dlp
 from threading import Thread
 from queue import Queue
@@ -10,7 +11,13 @@ os.makedirs(DOWNLOADS_FOLDER, exist_ok=True)
 
 log_queue = Queue()
 
+def clear_downloads():
+    if os.path.exists(DOWNLOADS_FOLDER):
+        shutil.rmtree(DOWNLOADS_FOLDER)
+    os.makedirs(DOWNLOADS_FOLDER, exist_ok=True)
+
 def download_audio(url):
+    clear_downloads()
     log_queue.put(f"Procesando URL: {url} en formato audio\n")
     ydl_opts = {
         "format": "bestaudio/best",
@@ -56,5 +63,10 @@ def logs():
             yield f"data: {msg}\n\n"
     return Response(generate(), mimetype="text/event-stream")
 
+@app.route("/download/<filename>")
+def download_file(filename):
+    return send_from_directory(DOWNLOADS_FOLDER, filename, as_attachment=True)
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
+
