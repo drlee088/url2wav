@@ -28,7 +28,11 @@ def download_audio(url):
             ydl.download([url])
         log_queue.put("✅ Descarga completada!\n")
     except Exception as e:
-        log_queue.put(f"❌ Error: {e}\n")
+        err_text = str(e)
+        if "Sign in to confirm you’re not a bot" in err_text:
+            log_queue.put("❌ Error: Este video requiere login o no es público.\n")
+        else:
+            log_queue.put(f"❌ Error: {err_text}\n")
 
 def progress_hook(d):
     if d['status'] == 'downloading':
@@ -54,4 +58,3 @@ def logs():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
-
